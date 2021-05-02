@@ -10,13 +10,21 @@ int main(int argc,const char *argv[])
     const char *F = argv[6];
     double CR = atof(argv[7]);
     double Factor = atof(argv[8]);
-
+    const char *Algorithm = argv[9];
 
     if( argc > 1 )
     {
-        
-        DE de;  
-        de.ALL(run,iteration, pop,DIM,F,OUTPUT_NODE_QUANTITY,CR,Factor);
+        if(Algorithm == std::string("D"))
+        {
+            DE de;  
+            de.ALL(run,iteration, pop,DIM,F,OUTPUT_NODE_QUANTITY,CR,Factor);
+        }
+        else if((Algorithm == std::string("P")))
+        {
+            PSO pso;
+            pso.ALL(run,iteration,pop,DIM,F,OUTPUT_NODE_QUANTITY);
+        }
+       
         
     }
     
