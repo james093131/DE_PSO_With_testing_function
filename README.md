@@ -1,4 +1,4 @@
-# SEEN
+# DE or PSO
 1. Type the following command to compile the program:
 
    make
