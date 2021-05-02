@@ -5,8 +5,8 @@
 
 2. Type either one of the following two commands to run the program:
 
-  ./DE
+  ./MAIN
 
   or
 
-   ./DE [run] [iteration] [Dim] [pop] [Output_quantity] [Function] [Crossover_rate] [Scaling_Factor] 
+   ./MAIN [run] [iteration] [Dim] [pop] [Output_quantity] [Function] [Crossover_rate] [Scaling_Factor] [Algorithm]
