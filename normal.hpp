@@ -10,7 +10,10 @@
 #include<math.h>
 #include<float.h>
 #include <sys/stat.h>
+#include <iomanip>
 
+
+#include "cec17_test_func.c"
 using namespace std;
 
 typedef vector<char> c1d;
@@ -36,20 +39,21 @@ class Function{
                 //testing function
         void INI_FUNCTION(int DIM,int index,const char *F,d2d &arr,d1d &objective)
         {
-            if(F == std::string("A"))
-            {
-                ACKLEY(DIM,index,arr,objective);
-            }
-            else if (F == std::string("R"))
-                RASTRIGIN(DIM,index,arr,objective);
-            else if(F ==std::string("B"))
-                Bent_Cigar(DIM,index,arr,objective);
-            else if(F ==std::string("Z"))
-                Zakharov(DIM,index,arr,objective);
-            else if(F ==std::string("RO"))
-                ROSENBROCK(DIM,index,arr,objective);  
-            else if(F ==std::string("S"))
-                Schaffer_F7(DIM,index,arr,objective);  
+            RANDOM_INI(DIM,index,arr,objective);
+            // if(F == std::string("A"))
+            // {
+            //     ACKLEY(DIM,index,arr,objective);
+            // }
+            // else if (F == std::string("R"))
+            //     RASTRIGIN(DIM,index,arr,objective);
+            // else if(F ==std::string("B"))
+            //     Bent_Cigar(DIM,index,arr,objective);
+            // else if(F ==std::string("Z"))
+            //     Zakharov(DIM,index,arr,objective);
+            // else if(F ==std::string("RO"))
+            //     ROSENBROCK(DIM,index,arr,objective);  
+            // else if(F ==std::string("S"))
+            //     Schaffer_F7(DIM,index,arr,objective);  
 
         }
         double FUNCTION(int DIM,d1d arr,const char *F)
@@ -245,6 +249,18 @@ class Function{
             double F = Schaffer_F7_OBJECTIVE_VALUE(DIM,arr[index]);
             objective[index] = F;
         }
+        void RANDOM_INI(int DIM,int index,d2d &arr,d1d &objective)
+        {
+            max = 100;
+            min = -100;
+      
+            for(int i=0;i<DIM;i++)
+            {
+                double a = ((float(rand()) / float(RAND_MAX)) * (max - min)) + min;
+                arr[index][i] = a;
+            }
+
+        }
 };
 class Output{
     
@@ -253,34 +269,51 @@ class Output{
         double RUN_BEST;
         int CURRENT_RECORD_NODE;
     public:
-        void OUTPUT(int run,double START,double END,int iteration,int pop,int DIM,int record_Node,const char *F,d1d Each_Run_Iteration_Best  )
+        void CEC_Classify(int F,const char *ALG,double START,double END)
         {
-            FIND_AVG_BEST(Each_Run_Iteration_Best);
+            fstream file;
+            string K;
+            string DIR = "CEC_2017";
+            if((ALG == std::string("P")))
+                K = "PSO";
+            else    
+                K = "DE";
+            string A = DIR+"/"+K+"2017_CEC_Classify"+".txt";
+            file.open(A,ios::app);
+            file<<F<<' '<<RUN_BEST-F*100<<' '<<RUN_AVG-F*100<<' '<<(END - START) / CLOCKS_PER_SEC<<endl;
+        }
+        void OUTPUT(int run,double START,double END,int iteration,int pop,int DIM,int record_Node,int F,d1d Each_Run_Iteration_Best ,d1d Each_Run_Result )
+        {
+            FIND_AVG_BEST(Each_Run_Result);
             for(int i=0;i<Each_Run_Iteration_Best.size();i++)
             {
-                cout<<i+1<<' '<<Each_Run_Iteration_Best[i]/run<<endl;
+                if((i+1)%100==0 || i==0)
+                    cout<<i+1<<' '<<Each_Run_Iteration_Best[i]/run<<endl;
             }
 
             string FUN;
-            if(F == std::string("A"))
-                FUN = "Ackley";
-            else if(F == std::string("R"))
-                FUN = "Rastrigin";
-            else if(F == std::string("Z"))
-                FUN = "Zakharov";
-            else if(F == std::string("B"))
-                FUN = "Bent_Cigar";
-            else if(F == std::string("RO"))
-                FUN = "Rosenbrock";
-            else if(F == std::string("S"))
-                FUN = "Schaffer_F7";  
-            cout<<"# Testing Function : "<<FUN<<endl;
+            // if(F == std::string("A"))
+            //     FUN = "Ackley";
+            // else if(F == std::string("R"))
+            //     FUN = "Rastrigin";
+            // else if(F == std::string("Z"))
+            //     FUN = "Zakharov";
+            // else if(F == std::string("B"))
+            //     FUN = "Bent_Cigar";
+            // else if(F == std::string("RO"))
+            //     FUN = "Rosenbrock";
+            // else if(F == std::string("S"))
+            //     FUN = "Schaffer_F7";  
+            cout<<"# CEC Testing Function : "<<F<<endl;
             cout<<"# Run : "<<run<<endl;
             cout <<"# Iteration :"<<iteration<<endl;   
-            cout<<"# Best Objective Value "<<RUN_BEST<<endl;
-            cout<<"# Average Objective Value "<<RUN_AVG<<endl;
-            cout<<"# Record Node "<<record_Node<<endl;
-            cout<<"# Execution Time :"<<(END - START) / CLOCKS_PER_SEC<<"(s)"<<endl;
+            cout<<"# Best Objective Value "<<endl<<RUN_BEST - F*100<<endl;
+            cout<<"# Average Objective Value "<<endl<<RUN_AVG - F*100<<endl;
+            // cout<<"# Record Node "<<record_Node<<endl;
+            cout<<"# Execution Time :"<<endl<<(END - START) / CLOCKS_PER_SEC<<"(s)"<<endl;
+
+            cout<<"# Best Objective ; Average Objective Value ; Value Execution Time  "<<endl;
+            cout << fixed  <<  setprecision(8) <<RUN_BEST - F*100<<' '<<RUN_AVG - F*100<<' '<<(END - START) / CLOCKS_PER_SEC<<endl;
         };
             void print(i2d X)
             {
@@ -406,7 +439,7 @@ class DE : public Function ,Output{
         d1d Each_Run_Result;
 
     public:
-        void ALL(int run,int iteration,int pop,int DIM,const char *F,int OUTPUT_NODE_QUANTITY,double R_CR,double R_FACTOR)
+        void ALL(int run,int iteration,int pop,int DIM,int F,int OUTPUT_NODE_QUANTITY,double R_CR,double R_FACTOR,const char *ALG)
         {   
             srand( time(NULL) );
             INI_RUN(iteration,run);
@@ -418,13 +451,23 @@ class DE : public Function ,Output{
             {
                 int ITER = 0 ;
                 INI( iteration, DIM, pop, OUTPUT_NODE_QUANTITY,R_CR,R_FACTOR);
+                
+              
+                
                 for(int i= 0;i<pop;i++)
                 {
-                    Function::INI_FUNCTION(DIM,i,F,De_inf.Position,De_inf.Objecive_Value);
+                    Function::RANDOM_INI(DIM,i,De_inf.Position,De_inf.Objecive_Value);
                 }
-                Evaluation(pop);
+              
                 while(ITER<iteration)
                 {
+                    // cout<<"CEC1"<<endl;
+                    for(int i=0;i<De_inf.Position.size();i++)
+                    {
+                        cec17_test_func(&De_inf.Position[i][0], &De_inf.Objecive_Value[i], DIM, 1, F);   
+                    }
+                
+                    
                     Evaluation(pop);
 
 
@@ -435,22 +478,22 @@ class DE : public Function ,Output{
 
 
                     RANDOM_RECORD_NODE(OUTPUT_NODE_QUANTITY/iteration,De_inf.Position,Output_Node.NODE_Coordinate,De_inf.Objecive_Value,Output_Node.NODE_Objective_Value);
-                    Each_Run_Iteration_Best[ITER] = Current_inf.Current_Best_Value;
+                    Each_Run_Iteration_Best[ITER] += Current_inf.Current_Best_Value;
 
 
-                    if(CURRENT_RECORD_NODE%2000==0)
-                        OUTPUT_RECORD_NODE(F,DIM,CURRENT_RECORD_NODE/20,Output_Node.NODE_Coordinate,Output_Node.NODE_Objective_Value);
+                    // if(CURRENT_RECORD_NODE%2000==0)
+                        // OUTPUT_RECORD_NODE(F,DIM,CURRENT_RECORD_NODE/20,Output_Node.NODE_Coordinate,Output_Node.NODE_Objective_Value);
                     ITER++;
                 } 
 
-                Each_Run_Result[r] = Each_Run_Iteration_Best[iteration-1];
+                Each_Run_Result[r] = Current_inf.Current_Best_Value;
 
                 r++;
             }
             END = clock();
-            OUTPUT(run, START, END,iteration,pop,DIM,OUTPUT_NODE_QUANTITY,F,Each_Run_Iteration_Best);
+            OUTPUT(run, START, END,iteration,pop,DIM,OUTPUT_NODE_QUANTITY,F,Each_Run_Iteration_Best,Each_Run_Result);
 
-
+            CEC_Classify(F,ALG, START,END);
             
 
         }
@@ -545,32 +588,45 @@ class DE : public Function ,Output{
     {
         for(int i=0;i<pop;i++)
         {
+            double x = (double) rand() / (RAND_MAX + 1.0);
+            d1d temp_V(DIM,0);
+            int xr = rand() % ((pop-1) - 0 + 1) + 0;
+
+            int x1 = rand() % ((pop-1) - 0 + 1) + 0;
+            while(x1 == xr)
+            {
+                x1 = rand() % ((pop-1) - 0 + 1) + 0;
+            }
+            int x2 = rand() % ((pop-1) - 0 + 1) + 0;
+            while(x1 ==x2 ||xr == x2)
+            {
+                x2 = rand() % ((pop-1) - 0 + 1) + 0;
+            }
             for(int j=0;j<DIM;j++)
             {
-                double x = (double) rand() / (RAND_MAX + 1.0);
-                int x1 = rand() % ((pop-1) - 0 + 1) + 0;
-                int x2 = rand() % ((pop-1) - 0 + 1) + 0;
-                while(x1 ==x2)
-                {
-                    x2 = rand() % ((pop-1) - 0 + 1) + 0;
-                }
-
+               temp_V[j] = De_inf.Position[xr][j] + Scaling_Factor*(De_inf.Position[x1][j]-De_inf.Position[x2][j]);
+                    
+            }
+            for(int j=0;j<DIM;j++)
+            {
+               
                 if(x<CR)
-                    De_inf.Vector[i][j] = De_inf.Position[i][j] + Scaling_Factor*(De_inf.Position[x1][j]-De_inf.Position[x2][j]);
+                    De_inf.Vector[i][j] = temp_V[j];
                 else    
                     De_inf.Vector[i][j] = De_inf.Position[i][j];
             }
         }
     }
-    void Selection(int pop,int DIM,const char* F)
+    void Selection(int pop,int DIM,int F)
     {
         for(int i= 0;i<pop;i++)
         {
-            double FIT = FUNCTION(DIM,De_inf.Vector[i],F);
-            if(FIT < De_inf.Objecive_Value[i])
+            double *FIT = new double[1];
+            cec17_test_func(&De_inf.Vector[i][0], FIT, DIM, 1, F);
+            if(FIT[0] < De_inf.Objecive_Value[i])
             {
                 De_inf.Position[i].assign(De_inf.Vector[i].begin(), De_inf.Vector[i].end());
-                De_inf.Objecive_Value[i] = FIT;
+                De_inf.Objecive_Value[i] = FIT[0];
             }
 
         }
@@ -596,7 +652,7 @@ class PSO: public Function,Output{
         d1d Each_Run_Result;
 
     public:
-        void ALL(int run,int iteration,int pop,int DIM,const char *F,int OUTPUT_NODE_QUANTITY)
+        void ALL(int run,int iteration,int pop,int DIM,int F,int OUTPUT_NODE_QUANTITY,const char *ALG)
         {   
             srand( time(NULL) );
             INI_RUN(iteration,run);
@@ -610,34 +666,33 @@ class PSO: public Function,Output{
                 INI( iteration, DIM, pop, OUTPUT_NODE_QUANTITY);
                 for(int i= 0;i<pop;i++)
                 {
-                    Function::INI_FUNCTION(DIM,i,F,PSO_inf.Particle,PSO_inf.Objective);
+                    Function::RANDOM_INI(DIM,i,PSO_inf.Particle,PSO_inf.Objective);
                 }
                 Initial_Velocity(pop,DIM);
-                Evaluation(F,pop,DIM);
+                Evaluation(pop,DIM,F);
                 while(ITER<iteration)
                 {
                    
                     Update_Velocity(pop,DIM);
                     Update_Position(pop,DIM);
-                    Evaluation(F,pop,DIM);
+                    Evaluation(pop,DIM,F);
 
-                    Each_Run_Iteration_Best[ITER] = Current_inf.Current_Best_Value;
+                    Each_Run_Iteration_Best[ITER] += Current_inf.Current_Best_Value;
 
-                    RANDOM_RECORD_NODE(OUTPUT_NODE_QUANTITY/iteration,PSO_inf.Particle,Output_Node.NODE_Coordinate,PSO_inf.Objective,Output_Node.NODE_Objective_Value);
+                    // RANDOM_RECORD_NODE(OUTPUT_NODE_QUANTITY/iteration,PSO_inf.Particle,Output_Node.NODE_Coordinate,PSO_inf.Objective,Output_Node.NODE_Objective_Value);
 
-                    if(CURRENT_RECORD_NODE%2000==0)
-                        OUTPUT_RECORD_NODE(F,DIM,CURRENT_RECORD_NODE/20,Output_Node.NODE_Coordinate,Output_Node.NODE_Objective_Value);
+                    // if(CURRENT_RECORD_NODE%2000==0)
+                    //     OUTPUT_RECORD_NODE(F,DIM,CURRENT_RECORD_NODE/20,Output_Node.NODE_Coordinate,Output_Node.NODE_Objective_Value);
                     ITER++;
                 } 
 
-                Each_Run_Result[r] = Each_Run_Iteration_Best[iteration-1];
-
+                Each_Run_Result[r] = Current_inf.Current_Best_Value;
                 r++;
             }
             END = clock();
-            OUTPUT(run, START, END,iteration,pop,DIM,OUTPUT_NODE_QUANTITY,F,Each_Run_Iteration_Best);
+            OUTPUT(run, START, END,iteration,pop,DIM,OUTPUT_NODE_QUANTITY,F,Each_Run_Iteration_Best,Each_Run_Result);
 
-
+            CEC_Classify(F,ALG, START,END);
             
 
         }
@@ -779,11 +834,15 @@ class PSO: public Function,Output{
                     }
                 }
             }
-            void Evaluation(const char*F,int pop,int DIM)
+            void Evaluation(int pop,int DIM,int F)
             {
                 for(int i=0;i<pop;i++)
                 {   
-                    PSO_inf.Objective[i] = Function::FUNCTION(DIM,PSO_inf.Particle[i],F);
+                     
+                    
+                    cec17_test_func(&PSO_inf.Particle[i][0], &PSO_inf.Objective[i], DIM, 1, F);
+                        
+                    // PSO_inf.Objective[i] = Function::FUNCTION(DIM,PSO_inf.Particle[i],F);
                     if(PSO_inf.Objective[i] < Personal_inf.Personal_Best_Value[i])
                     {
                         Personal_inf.Personal_Best_Value[i] = PSO_inf.Objective[i];
